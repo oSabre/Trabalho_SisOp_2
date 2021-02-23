@@ -9,6 +9,10 @@ int n = 1;
 // número de threads a serem criadas
 int t = 2;
 
+pthread_t *threads;
+int status, i;
+void* thread_return;
+
 // limites função 1
 float a1 = 0.0;
 float b1 = 10.0;
@@ -30,9 +34,16 @@ float calculo(float a, float b, int m){
 	return area_total;
 }
 
-void* funcThread(){
+void* funcThread(void *tid){
 	float local_a, local_b, retorno;
 	int local_n;
+	if((int)(size_t)tid > 0){
+		pthread_join(threads[(size_t)tid-1], &thread_return);
+		printf("Esta é a thread %d. A thread %d finalizou. \n", (int)(size_t)tid, (int)(size_t)tid-1);
+	}else{
+		printf("Esta é a primeira thread\n");
+	}
+
 	//retorno = calculo(local_a, local_b, local_n);
 	pthread_exit(NULL);
 }
@@ -44,9 +55,7 @@ int main(int argc, char const *argv[])
 	t = atoi(argv[1]);
 	n = atoi(argv[2]);
 
-	pthread_t threads[t];
-	int status, i;
-	void* thread_return;
+	threads = (pthread_t *) malloc(t * sizeof(pthread_t));
 
 	for(i = 0; i < t; ++i){
 		printf("Processo principal criando thread #%d\n", i);
@@ -58,12 +67,9 @@ int main(int argc, char const *argv[])
 		}
 	}
 
-	for(i = 0; i < t; i++){
-		printf("Esperando Thread %d finalizar \n", i);
-		pthread_join(threads[i], &thread_return);
-		printf("Thread %d finalizada\n", i);
-	}
-
+	printf("Esperando thread %d finalizar\n", i-1);
+	pthread_join(threads[i-1], &thread_return);
+	printf("thread %d finalizou\n", i-1);
 	printf("Processo vai finalizar.\n");
 	return 0;
 }
